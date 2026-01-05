@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Progress Widget</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px;
+      text-align: center;
+    }
+
+    .row {
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 13px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #1f2937;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #3b82f6);
+      transition: width 0.3s linear;
+    }
+
+    .percent {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Прогресс времени</h1>
+
+    <div class="row">
+      <div class="label">
+        <span>День</span>
+        <span class="percent" id="day-text">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="day-bar"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="label">
+        <span>Неделя</span>
+        <span class="percent" id="week-text">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="week-bar"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="label">
+        <span>Месяц</span>
+        <span class="percent" id="month-text">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="month-bar"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="label">
+        <span>Год (календарный)</span>
+        <span class="percent" id="year-text">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="year-bar"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="label">
+        <span>Персональный год<br><span style="font-size:11px; opacity:0.7;">22.04.2025 – 22.04.2026</span></span>
+        <span class="percent" id="personal-text">0%</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill" id="personal-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Универсальная функция расчёта процента между двумя датами
+    function getProgressPercent(startDate, endDate, now) {
+      const start = startDate.getTime();
+      const end = endDate.getTime();
+      const current = now.getTime();
+
+      if (current <= start) return 0;
+      if (current >= end) return 100;
+
+      const progress = (current - start) / (end - start);
+      return Math.round(progress * 100);
+    }
+
+    function updateProgress() {
+      const now = new Date();
+
+      // День: от начала сегодняшнего дня до его конца
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+      const dayPercent = getProgressPercent(dayStart, dayEnd, now);
+
+      // Неделя: предполагаем, что неделя начинается с понедельника
+      const dayOfWeek = (now.getDay() + 6) % 7; // 0 = понедельник, 6 = воскресенье [web:10]
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 0, 0, 0, 0); [web:10]
+      const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7, 0, 0, 0, 0); [web:10]
+      const weekPercent = getProgressPercent(weekStart, weekEnd, now);
+
+      // Месяц
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0); [web:10]
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0); [web:10]
+      const monthPercent = getProgressPercent(monthStart, monthEnd, now);
+
+      // Календарный год
+      const yearStart = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0); [web:18]
+      const yearEnd = new Date(now.getFullYear() + 1, 0, 1, 0, 0, 0, 0); [web:18]
+      const yearPercent = getProgressPercent(yearStart, yearEnd, now);
+
+      // Персональный год: 22.04.2025 – 22.04.2026
+      const personalStart = new Date(2025, 3, 22, 0, 0, 0, 0); // месяц 3 = апрель [web:21]
+      const personalEnd = new Date(2026, 3, 22, 0, 0, 0, 0); [web:21]
+      const personalPercent = getProgressPercent(personalStart, personalEnd, now);
+
+      // Обновление DOM
+      function setBar(idBar, idText, value) {
+        const bar = document.getElementById(idBar);
+        const text = document.getElementById(idText);
+        if (bar) bar.style.width = value + "%";
+        if (text) text.textContent = value + "%";
+      }
+
+      setBar("day-bar", "day-text", dayPercent);
+      setBar("week-bar", "week-text", weekPercent);
+      setBar("month-bar", "month-text", monthPercent);
+      setBar("year-bar", "year-text", yearPercent);
+      setBar("personal-bar", "personal-text", personalPercent);
+    }
+
+    updateProgress();
+    // Обновляем каждую минуту
+    setInterval(updateProgress, 60 * 1000);
+  </script>
+</body>
+</html>
